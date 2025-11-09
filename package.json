@@ -1,0 +1,21 @@
+{
+  "name": "securefiles",
+  "version": "1.0.0",
+  "description": "A secure file upload and download tool",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "file-type": "^21.0.0",
+    "multer": "^2.0.2",
+    "speakeasy": "^2.0.0",
+    "sqlite3": "^5.1.7"
+  }
+}
