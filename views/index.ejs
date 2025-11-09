@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureFiles - Upload</title>
+</head>
+<body>
+    <h1>SecureFiles - Secure File Upload</h1>
+    
+    <p>Upload encrypted archives (ZIP with password) securely. Each file is protected with TOTP authentication.</p>
+    
+    <% if (error) { %>
+        <p style="color: red;"><strong>Error:</strong> <%= error %></p>
+    <% } %>
+    
+    <% if (message) { %>
+        <p style="color: green;"><strong>Success:</strong> <%= message %></p>
+    <% } %>
+    
+    <h2>Upload File</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <p>
+            <label for="filename">File Name:</label><br>
+            <input type="text" id="filename" name="filename" size="50" placeholder="Optional - uses original filename if not provided">
+        </p>
+        
+        <p>
+            <label for="file">Select File (Encrypted Archive Only):</label><br>
+            <input type="file" id="file" name="file" required>
+        </p>
+        
+        <p>
+            <input type="submit" value="Upload File">
+        </p>
+    </form>
+    
+    <hr>
+    
+    <h2>Download File</h2>
+    <form action="/download-redirect" method="GET">
+        <p>
+            <label for="uuid">File UUID:</label><br>
+            <input type="text" id="uuid" name="uuid" size="50" placeholder="Enter the file UUID" required>
+        </p>
+        
+        <p>
+            <input type="submit" value="Go to Download Page">
+        </p>
+    </form>
+</body>
+</html>

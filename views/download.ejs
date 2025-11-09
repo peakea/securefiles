@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download File - SecureFiles</title>
+</head>
+<body>
+    <h1>SecureFiles - Download File</h1>
+    
+    <p>Enter the TOTP code to download your file.</p>
+    
+    <% if (error) { %>
+        <p style="color: red;"><strong>Error:</strong> <%= error %></p>
+    <% } %>
+    
+    <h2>Download File: <%= uuid %></h2>
+    
+    <form action="/download/<%= uuid %>" method="POST">
+        <p>
+            <label for="totp">TOTP Code:</label><br>
+            <input type="text" id="totp" name="totp" size="10" placeholder="6-digit code" required maxlength="6" pattern="[0-9]{6}">
+        </p>
+        
+        <p>
+            <input type="submit" value="Download File">
+        </p>
+    </form>
+    
+    <p style="color: gray;">
+        <strong>Note:</strong> TOTP codes change every 30 seconds. If your code doesn't work, generate a new one and try again.
+    </p>
+    
+    <hr>
+    
+    <p>
+        <a href="/">Back to Home</a>
+    </p>
+</body>
+</html>
