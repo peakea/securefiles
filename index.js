@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('sqlite3');
 const speakeasy = require('speakeasy');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -30,6 +30,16 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
+
+// Ensure required directories exist
+const dataDir = path.join(__dirname, 'data');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Initialize SQLite database
 const db = new sqlite3.Database('./data/securefiles.db', (err) => {
@@ -111,6 +121,44 @@ app.get('/', (req, res) => {
   res.render('index', { message: null, error: null });
 });
 
+// TOTP test page
+app.get('/totp-test', (req, res) => {
+  res.render('totp-test', { code: null, error: null, secret: null });
+});
+
+// TOTP test generation
+app.post('/totp-test', (req, res) => {
+  const { secret } = req.body;
+  
+  if (!secret) {
+    return res.render('totp-test', { 
+      code: null, 
+      error: 'Secret is required', 
+      secret: null 
+    });
+  }
+  
+  try {
+    // Generate TOTP code from the provided secret
+    const token = speakeasy.totp({
+      secret: secret,
+      encoding: 'base32'
+    });
+    
+    res.render('totp-test', { 
+      code: token, 
+      error: null, 
+      secret: secret 
+    });
+  } catch (error) {
+    res.render('totp-test', { 
+      code: null, 
+      error: 'Invalid secret format. Please ensure it is a valid Base32 encoded string.', 
+      secret: secret 
+    });
+  }
+});
+
 // File upload endpoint
 app.post('/upload', uploadLimiter, upload.single('file'), async (req, res) => {
   try {
@@ -152,13 +200,8 @@ app.post('/upload', uploadLimiter, upload.single('file'), async (req, res) => {
           return res.render('index', { error: 'Error saving file', message: null });
         }
 
-        // Generate current TOTP code
-        const token = speakeasy.totp({
-          secret: totpSecret.base32,
-          encoding: 'base32'
-        });
-
-        res.render('upload-success', { uuid, token, filename: fileName });
+        // Pass the TOTP secret for the user to save
+        res.render('upload-success', { uuid, totpSecret: totpSecret.base32, filename: fileName });
       }
     );
   } catch (error) {

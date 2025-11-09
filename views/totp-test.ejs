@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOTP Code Generator - SecureFiles</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            letter-spacing: 4px;
+            margin: 20px 0;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>TOTP Code Generator</h1>
+    
+    <p>Enter your TOTP secret (Base32 encoded) to generate the current 6-digit code.</p>
+    
+    <form method="POST" action="/totp-test">
+        <div class="form-group">
+            <label for="secret">TOTP Secret (Base32):</label>
+            <input 
+                type="text" 
+                id="secret" 
+                name="secret" 
+                placeholder="e.g., JBSWY3DPEHPK3PXP"
+                value="<%= secret || '' %>"
+                required
+            >
+        </div>
+        
+        <button type="submit">Generate Code</button>
+    </form>
+    
+    <% if (code) { %>
+        <div class="result">
+            <h2>Current TOTP Code:</h2>
+            <div class="code"><%= code %></div>
+            <p style="text-align: center; color: #666;">
+                This code is valid for approximately 30 seconds
+            </p>
+        </div>
+    <% } %>
+    
+    <% if (error) { %>
+        <div class="error">
+            <strong>Error:</strong> <%= error %>
+        </div>
+    <% } %>
+    
+    <div class="info">
+        <strong>Note:</strong> TOTP codes change every 30 seconds. You can use this page to test 
+        the secret provided after file upload to ensure it generates valid codes.
+    </div>
+    
+    <hr>
+    
+    <p>
+        <a href="/">← Back to Home</a>
+    </p>
+</body>
+</html>

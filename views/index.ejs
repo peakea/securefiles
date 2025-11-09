@@ -4,49 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureFiles - Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="file"] {
+            padding: 8px;
+        }
+        button, input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover, input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .error {
+            padding: 15px;
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .success {
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            color: #2e7d32;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+        hr {
+            margin: 40px 0;
+            border: none;
+            border-top: 2px solid #eee;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>SecureFiles - Secure File Upload</h1>
+    <h1>SecureFiles</h1>
     
-    <p>Upload encrypted archives (ZIP with password) securely. Each file is protected with TOTP authentication.</p>
+    <div class="info">
+        Upload encrypted archives (ZIP with password) securely. Each file is protected with TOTP authentication.
+    </div>
     
     <% if (error) { %>
-        <p style="color: red;"><strong>Error:</strong> <%= error %></p>
+        <div class="error">
+            <strong>Error:</strong> <%= error %>
+        </div>
     <% } %>
     
     <% if (message) { %>
-        <p style="color: green;"><strong>Success:</strong> <%= message %></p>
+        <div class="success">
+            <strong>Success:</strong> <%= message %>
+        </div>
     <% } %>
     
-    <h2>Upload File</h2>
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-        <p>
-            <label for="filename">File Name:</label><br>
-            <input type="text" id="filename" name="filename" size="50" placeholder="Optional - uses original filename if not provided">
-        </p>
-        
-        <p>
-            <label for="file">Select File (Encrypted Archive Only):</label><br>
-            <input type="file" id="file" name="file" required>
-        </p>
-        
-        <p>
+    <div class="section">
+        <h2>Upload File</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="filename">File Name (Optional):</label>
+                <input type="text" id="filename" name="filename" placeholder="Uses original filename if not provided">
+            </div>
+            
+            <div class="form-group">
+                <label for="file">Select File (Encrypted Archive Only):</label>
+                <input type="file" id="file" name="file" required>
+            </div>
+            
             <input type="submit" value="Upload File">
-        </p>
-    </form>
+        </form>
+    </div>
     
     <hr>
     
-    <h2>Download File</h2>
-    <form action="/download-redirect" method="GET">
-        <p>
-            <label for="uuid">File UUID:</label><br>
-            <input type="text" id="uuid" name="uuid" size="50" placeholder="Enter the file UUID" required>
-        </p>
-        
-        <p>
+    <div class="section">
+        <h2>Download File</h2>
+        <form action="/download-redirect" method="GET">
+            <div class="form-group">
+                <label for="uuid">File UUID:</label>
+                <input type="text" id="uuid" name="uuid" placeholder="Enter the file UUID" required>
+            </div>
+            
             <input type="submit" value="Go to Download Page">
-        </p>
-    </form>
+        </form>
+    </div>
+    
+    <p style="text-align: center; margin-top: 40px;">
+        <a href="/totp-test">TOTP Code Generator</a>
+    </p>
 </body>
 </html>
