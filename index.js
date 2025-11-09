@@ -6,9 +6,23 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { fileTypeFromBuffer } = require('file-type');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Rate limiting configuration
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 upload requests per windowMs
+  message: 'Too many upload requests from this IP, please try again later.'
+});
+
+const downloadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 download requests per windowMs
+  message: 'Too many download requests from this IP, please try again later.'
+});
 
 // Set up EJS
 app.set('view engine', 'ejs');
@@ -98,7 +112,7 @@ app.get('/', (req, res) => {
 });
 
 // File upload endpoint
-app.post('/upload', upload.single('file'), async (req, res) => {
+app.post('/upload', uploadLimiter, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.render('index', { error: 'No file uploaded', message: null });
@@ -123,7 +137,9 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     const encryptedBuffer = encryptFile(req.file.buffer);
 
     // Save encrypted file to disk
-    const filePath = path.join(__dirname, 'uploads', uuid);
+    // Use basename to prevent any potential path traversal
+    const safeUuid = path.basename(uuid);
+    const filePath = path.join(__dirname, 'uploads', safeUuid);
     fs.writeFileSync(filePath, encryptedBuffer);
 
     // Store in database
@@ -167,9 +183,15 @@ app.get('/download/:uuid', (req, res) => {
 });
 
 // Download file endpoint
-app.post('/download/:uuid', (req, res) => {
+app.post('/download/:uuid', downloadLimiter, (req, res) => {
   const { uuid } = req.params;
   const { totp } = req.body;
+
+  // Validate UUID format to prevent path traversal
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(uuid)) {
+    return res.render('download', { uuid, error: 'Invalid UUID format' });
+  }
 
   if (!totp) {
     return res.render('download', { uuid, error: 'TOTP code is required' });
@@ -194,7 +216,9 @@ app.post('/download/:uuid', (req, res) => {
     }
 
     // Read and decrypt file
-    const filePath = path.join(__dirname, 'uploads', uuid);
+    // Use basename to prevent path traversal attacks
+    const safeUuid = path.basename(uuid);
+    const filePath = path.join(__dirname, 'uploads', safeUuid);
     try {
       const encryptedBuffer = fs.readFileSync(filePath);
       const decryptedBuffer = decryptFile(encryptedBuffer);
