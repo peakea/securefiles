@@ -9,7 +9,6 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync } from
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
-import { fileTypeFromBuffer } from 'file-type';
 
 // Polyfill __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -42,7 +41,7 @@ const maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 10
 
 // Initialize Express app
 const app = express();
-const PORT = config?.server?.port;
+const port = config?.server?.port;
 
 // Rate limiting configuration
 // Rate limiting configuration sourced from config (prefer structured objects, fallback to legacy flat keys)
@@ -394,6 +393,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`SecureFiles server running on port ${PORT}`);
+app.listen(port, () => {
+    console.log(`SecureFiles server running on port ${port}`);
 });
