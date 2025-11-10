@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 # Application specific
 uploads/
 data/
+
+# config.json
+config.json

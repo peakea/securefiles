@@ -1,0 +1,24 @@
+{
+    "server": {
+        "port": 3000
+    },
+    "paths": {
+        "viewsDir": "views",
+        "dataDir": "data",
+        "uploadsDir": "uploads",
+        "dbFile": "data/securefiles.sqlite"
+    },
+    "security": {
+        "algorithm": "aes-256-cbc",
+        "encryptionKey": "CHANGE_THIS_TO_A_SECURE_RANDOM_KEY_32_BYTES!",
+        "ivLength": 16,
+        "totpSecretLength": 20
+    },
+    "limits": {
+        "uploadWindowMs": 900000,
+        "uploadMax": 10,
+        "downloadWindowMs": 900000,
+        "downloadMax": 50,
+        "maxUploadBytes": 209215200
+    }
+}
