@@ -354,7 +354,7 @@ app.post('/totp-test', (req, res) => {
 
 // Multer error handler - add this BEFORE app.listen()
 app.use((err, req, res, next) => {
-    const maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
+    const maxUploadMB = Math.floor(config.limits?.maxUploadBytes / (1024 * 1024));
 
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
