@@ -1,11 +1,10 @@
 "use strict";
 import express, { urlencoded } from 'express';
 import multer, { memoryStorage } from 'multer';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
-import { randomBytes } from 'crypto';
 
 // Polyfill __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -25,17 +24,18 @@ if (!existsSync(configPath)) {
     copyFileSync(defaultConfigPath, configPath);
 }
 
-// Import controllers
+// Import controllers and services
 import { fileController } from './controllers/fileController.js';
 import { viewController } from './controllers/viewController.js';
-import fileModel from './models/fileModel.js';
+import { dbService } from './services/dbService.js';
 
 let config = readJson(configPath);
 if (!config) {
     throw new Error('Invalid JSON in config.json');
 }
 
-fileModel.setupDb(config);
+// Initialize database after config is loaded
+await dbService.setupDb(config);
 
 // Initialize Express app
 const app = express();
