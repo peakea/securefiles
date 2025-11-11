@@ -94,6 +94,3 @@ securefiles/
 - `PORT`: Server port (default: 3000)
 - `ENCRYPTION_KEY`: 32-byte encryption key for AES (auto-generated if not provided)
 
-## License
-
-ISC
