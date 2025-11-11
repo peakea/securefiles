@@ -7,10 +7,6 @@ import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
 import { randomBytes } from 'crypto';
 
-// Import controllers
-import { fileController } from './controllers/fileController.js';
-import { viewController } from './controllers/viewController.js';
-
 // Polyfill __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,13 +25,17 @@ if (!existsSync(configPath)) {
     copyFileSync(defaultConfigPath, configPath);
 }
 
-let config = readJson(configPath) || {};
-config.security = config.security || {};
-if (!config.security.encryptionKey) {
-    config.security.encryptionKey = randomBytes(32).toString('base64');
-    writeFileSync(configPath, JSON.stringify(config, null, 2));
-    console.log('Generated encryption key and saved to config.json.');
+// Import controllers
+import { fileController } from './controllers/fileController.js';
+import { viewController } from './controllers/viewController.js';
+import fileModel from './models/fileModel.js';
+
+let config = readJson(configPath);
+if (!config) {
+    throw new Error('Invalid JSON in config.json');
 }
+
+fileModel.setupDb(config);
 
 // Initialize Express app
 const app = express();
