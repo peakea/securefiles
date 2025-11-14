@@ -1,11 +1,10 @@
 "use strict";
 import express, { urlencoded } from 'express';
 import multer, { memoryStorage } from 'multer';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
-import { randomBytes } from 'crypto';
 
 // Polyfill __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -30,6 +29,9 @@ import { fileController, setupFileController } from './controllers/fileControlle
 import { viewController, setupViewController } from './controllers/viewController.js';
 import { setupDatabase } from './services/databaseService.js';
 import { setupEncryption } from './services/encryptionService.js';
+import { setupCaptchaService } from './services/captchaService.js';
+import { startCaptchaCleanup } from './services/captchaCleanupService.js';
+import { setupMaintenance, maintenanceMiddleware } from './middleware/maintenanceMiddleware.js';
 
 let config = readJson(configPath);
 if (!config) {
@@ -39,8 +41,13 @@ if (!config) {
 // Initialize services and controllers after config is loaded
 setupDatabase(config);
 setupEncryption(config);
+setupCaptchaService(config);
 setupFileController(config);
 setupViewController(config);
+setupMaintenance(config);
+
+// Start captcha cleanup task with config
+startCaptchaCleanup(config);
 
 // Initialize Express app
 const app = express();
@@ -75,6 +82,9 @@ app.set('views', join(__dirname, config.paths?.viewsDir));
 // Middleware
 app.use(urlencoded({ extended: true }));
 
+// Apply maintenance mode middleware before routes
+app.use(maintenanceMiddleware);
+
 // Ensure required directories exist
 const uploadsDir = join(__dirname, config.paths?.uploadsDir || 'uploads');
 if (!existsSync(uploadsDir)) {
@@ -92,6 +102,9 @@ const upload = multer({
 
 // Home page with upload form
 app.get('/', viewController.showHomePage);
+
+// Captcha image endpoint
+app.get('/captcha/:key', viewController.serveCaptchaImage);
 
 // File upload endpoint
 app.post('/upload', uploadLimiter, upload.single('file'), fileController.uploadFile);
@@ -112,35 +125,45 @@ app.get('/totp-test', viewController.showTotpTestPage);
 app.post('/totp-test', viewController.generateTotpTest);
 
 // Multer error handler - add this BEFORE app.listen()
-app.use((err, req, res) => {
+app.use(async (err, req, res) => {
     const maxUploadMB = Math.floor(config.limits?.maxUploadBytes / (1024 * 1024));
+    
+    // Generate new captcha for retry
+    const { captchaService } = await import('./services/captchaService.js');
+    const { captchaModel } = await import('./models/captchaModel.js');
+    const captcha = await captchaService.generate();
+    await captchaModel.create(captcha.key, captcha.text, captcha.expires);
 
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).render('index', {
                 error: `File size exceeds the maximum allowed limit of ${maxUploadMB} MB. Please upload a smaller file.`,
                 message: null,
-                maxUploadMB
+                maxUploadMB,
+                captchaKey: captcha.key
             });
         }
         if (err.code === 'LIMIT_FILE_COUNT') {
             return res.status(400).render('index', {
                 error: 'Too many files uploaded. Please upload one file at a time.',
                 message: null,
-                maxUploadMB
+                maxUploadMB,
+                captchaKey: captcha.key
             });
         }
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
             return res.status(400).render('index', {
                 error: 'Unexpected file field. Please use the correct upload form.',
                 message: null,
-                maxUploadMB
+                maxUploadMB,
+                captchaKey: captcha.key
             });
         }
         return res.status(400).render('index', {
             error: `Upload error: ${err.message}`,
             message: null,
-            maxUploadMB
+            maxUploadMB,
+            captchaKey: captcha.key
         });
     }
 
@@ -148,7 +171,8 @@ app.use((err, req, res) => {
     return res.status(500).render('index', {
         error: 'An unexpected error occurred. Please try again later.',
         message: null,
-        maxUploadMB
+        maxUploadMB,
+        captchaKey: captcha.key
     });
 });
 

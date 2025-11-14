@@ -7,8 +7,10 @@ A secure file upload and download service that uses TOTP authentication and AES 
 - **Secure Upload**: Upload encrypted archives (ZIP with password) anonymously
 - **TOTP Authentication**: Each file is protected with a unique Time-based One-Time Password (TOTP)
 - **AES Encryption**: All uploaded files are encrypted at rest using AES-256-CBC
-- **SQLite Database**: Simple single-table database storing UUID, filename, and TOTP secret
-- **HTML-Only Frontend**: Pure HTML interface with no JavaScript or CSS
+- **Captcha Protection**: Colorful captcha system prevents automated abuse
+- **Rate Limiting**: Configurable upload/download rate limits
+- **Maintenance Mode**: Easy toggle for scheduled maintenance
+- **SQLite Database**: Lightweight database with automatic cleanup
 - **EJS Templates**: Server-side rendering with Express and EJS
 
 ## Requirements
@@ -56,15 +58,37 @@ npm start
 
 ## Security Features
 
-- Only encrypted archives (ZIP files) are accepted
+- Only encrypted archives (ZIP, 7Z, RAR, GZIP, TAR) are accepted
 - Files are encrypted at rest using AES-256-CBC
 - Each file has a unique TOTP secret stored in the database
 - TOTP codes rotate every 30 seconds
+- Captcha verification prevents automated uploads
+- Rate limiting on uploads and downloads
 - Anonymous uploads - no user accounts required
+- Maintenance mode for secure updates
+
+## Configuration
+
+SecureFiles uses `config.json` for configuration. Key settings:
+
+- **Server**: Port configuration
+- **Security**: Encryption algorithm and key settings
+- **Captcha**: Visual captcha appearance and behavior
+  - Color mode with 8 pre-selected colors
+  - Configurable dimensions, fonts, and effects
+- **Maintenance**: Easy toggle for maintenance mode
+- **Rate Limits**: Upload and download throttling
+- **Paths**: Custom directories for data, uploads, views
+
+See `default-config.json` for all available options.
+
+For detailed documentation:
+- [Captcha System](CAPTCHA_SYSTEM.md)
+- [Maintenance Mode](MAINTENANCE_MODE.md)
 
 ## Database Schema
 
-The SQLite database contains a single table:
+The SQLite database contains two tables:
 
 ```sql
 CREATE TABLE files (
@@ -72,6 +96,12 @@ CREATE TABLE files (
   filename TEXT NOT NULL,
   totp_secret TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE captchas (
+  key TEXT PRIMARY KEY,
+  text TEXT NOT NULL,
+  created_at INTEGER NOT NULL
 );
 ```
 

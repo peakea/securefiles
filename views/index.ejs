@@ -123,6 +123,15 @@
                 <input type="file" id="file" name="file" required>
             </div>
             
+            <% if (captchaKey) { %>
+                <div class="form-group">
+                    <label for="captcha">Security Verification:</label>
+                    <img src="/captcha/<%= captchaKey %>" alt="Captcha" style="border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; display: block;">
+                    <input type="text" id="captchaAnswer" name="captchaAnswer" placeholder="Enter the text shown above" required autocomplete="off">
+                    <input type="hidden" name="captchaKey" value="<%= captchaKey %>">
+                </div>
+            <% } %>
+            
             <p>Maximum upload size: <%= maxUploadMB %> MB</p>
             
             <input type="submit" value="Upload File">

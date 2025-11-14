@@ -24,11 +24,32 @@ export const setupDatabase = (config) => {
             console.error('Error opening database', err);
         } else {
             console.log('Database connected');
+            
+            // Create files table
             db.run(`CREATE TABLE IF NOT EXISTS files (
                 uuid TEXT PRIMARY KEY,
                 filename TEXT NOT NULL,
                 totp_secret TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
+            
+            // Drop old captchas table if it exists (migration)
+            db.run(`DROP TABLE IF EXISTS captchas`, (dropErr) => {
+                if (dropErr) {
+                    console.error('Error dropping old captchas table:', dropErr);
+                } else {
+                    // Create new captchas table with correct schema
+                    db.run(`CREATE TABLE captchas (
+                        key TEXT PRIMARY KEY,
+                        text TEXT NOT NULL,
+                        created_at INTEGER NOT NULL)`, (createErr) => {
+                        if (createErr) {
+                            console.error('Error creating captchas table:', createErr);
+                        } else {
+                            console.log('Captchas table initialized');
+                        }
+                    });
+                }
+            });
         }
     });
 

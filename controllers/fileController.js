@@ -1,8 +1,10 @@
 "use strict";
 import { randomUUID } from 'crypto';
 import { fileModel } from '../models/fileModel.js';
+import { captchaModel } from '../models/captchaModel.js';
 import { encryptionService } from '../services/encryptionService.js';
 import { totpService } from '../services/totpService.js';
+import { captchaService } from '../services/captchaService.js';
 import { fileStorageService } from '../services/fileStorageService.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -13,19 +15,98 @@ const __dirname = dirname(__filename);
 // Configuration variables
 let uploadsDir = 'uploads';
 let maxUploadMB = 100;
+let captchaExpiryMs = 300000; // Default 5 minutes
 
 // Setup function to initialize controller with config
 export const setupFileController = (config) => {
     uploadsDir = join(__dirname, '..', config.paths?.uploadsDir || 'uploads');
     maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
+    captchaExpiryMs = config.captcha?.expiryMs || 300000;
 };
 
 export const fileController = {
     // Create - Upload a file
     uploadFile: async (req, res) => {
         try {
+            // Verify captcha first
+            const { captchaKey, captchaAnswer } = req.body;
+            
+            if (!captchaKey || !captchaAnswer) {
+                // Generate new captcha for retry
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
+                return res.render('index', { 
+                    error: 'Captcha verification required', 
+                    message: null, 
+                    maxUploadMB,
+                    captchaKey: captcha.key
+                });
+            }
+            
+            // Find captcha in database
+            const storedCaptcha = await captchaModel.findByKey(captchaKey);
+            
+            if (!storedCaptcha) {
+                // Generate new captcha for retry
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
+                return res.render('index', { 
+                    error: 'Captcha not found or already used', 
+                    message: null, 
+                    maxUploadMB,
+                    captchaKey: captcha.key
+                });
+            }
+            
+            // Check if captcha is expired based on creation time
+            if (captchaService.isExpired(storedCaptcha.created_at, captchaExpiryMs)) {
+                await captchaModel.delete(captchaKey);
+                
+                // Generate new captcha for retry
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
+                return res.render('index', { 
+                    error: 'Captcha expired. Please try again.', 
+                    message: null, 
+                    maxUploadMB,
+                    captchaKey: captcha.key
+                });
+            }
+            
+            // Verify captcha answer
+            if (!captchaService.verify(captchaAnswer, storedCaptcha.text)) {
+                // Delete used captcha
+                await captchaModel.delete(captchaKey);
+                
+                // Generate new captcha for retry
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
+                return res.render('index', { 
+                    error: 'Incorrect captcha answer. Please try again.', 
+                    message: null, 
+                    maxUploadMB,
+                    captchaKey: captcha.key
+                });
+            }
+            
+            // Delete used captcha after successful verification
+            await captchaModel.delete(captchaKey);
+            
             if (!req.file) {
-                return res.render('index', { error: 'No file uploaded', message: null, maxUploadMB });
+                // Generate new captcha for retry
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
+                return res.render('index', { 
+                    error: 'No file uploaded', 
+                    message: null, 
+                    maxUploadMB,
+                    captchaKey: captcha.key
+                });
             }
 
             const fileName = req.body.filename || req.file.originalname;
@@ -43,10 +124,16 @@ export const fileController = {
                     break;
                 default: {
                     console.error('Invalid file type uploaded:', fileType);
+                    
+                    // Generate new captcha for retry
+                    const captcha = await captchaService.generate();
+                    await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                    
                     return res.render('index', {
                         error: 'Only archive files (ZIP, 7Z, RAR, GZIP, TAR) are accepted',
                         message: null,
-                        maxUploadMB
+                        maxUploadMB,
+                        captchaKey: captcha.key
                     });
                 }
             }
@@ -68,10 +155,16 @@ export const fileController = {
             res.render('upload-success', { uuid, totpSecret: totpSecret.base32, filename: fileName });
         } catch (error) {
             console.error('Upload error:', error);
+            
+            // Generate new captcha for retry
+            const captcha = await captchaService.generate();
+            await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+            
             return res.render('index', { 
                 error: 'Error processing file upload: ' + error.message, 
                 message: null, 
-                maxUploadMB 
+                maxUploadMB,
+                captchaKey: captcha.key
             });
         }
     },
