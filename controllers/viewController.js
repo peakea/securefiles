@@ -9,6 +9,8 @@ let maxUploadMB = 100;
 let captchaExpiryMs = 300000; // Default 5 minutes
 let siteTitle = 'SecureFiles';
 let siteDescription = 'Upload encrypted archives securely with TOTP authentication';
+let uploadsEnabled = true;
+let uploadsDisabledMessage = 'Uploads are temporarily disabled. Please try again later.';
 let captchaDisplayConfig = {
     colorMode: false,
     font: 'Arial',
@@ -28,6 +30,8 @@ export const setupViewController = (config) => {
     captchaExpiryMs = config.captcha?.expiryMs || 300000;
     siteTitle = config.site?.title || 'SecureFiles';
     siteDescription = config.site?.description || 'Upload encrypted archives securely with TOTP authentication';
+    uploadsEnabled = config.uploads?.enabled ?? true;
+    uploadsDisabledMessage = config.uploads?.disabledMessage || 'Uploads are temporarily disabled. Please try again later.';
     captchaDisplayConfig = {
         colorMode: config.captcha?.colorMode ?? false,
         font: config.captcha?.font || 'Arial',
@@ -60,7 +64,9 @@ export const viewController = {
                 captchaKey: captcha.key,
                 captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
                 siteTitle,
-                siteDescription
+                siteDescription,
+                uploadsEnabled,
+                uploadsDisabledMessage
             });
         } catch (error) {
             console.error('Error generating captcha:', error);
@@ -71,7 +77,9 @@ export const viewController = {
                 captchaKey: null,
                 captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
                 siteTitle,
-                siteDescription
+                siteDescription,
+                uploadsEnabled,
+                uploadsDisabledMessage
             });
         }
     },
@@ -190,7 +198,9 @@ export const viewController = {
                     captchaKey: captcha.key,
                     captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
                     siteTitle,
-                    siteDescription
+                    siteDescription,
+                    uploadsEnabled,
+                    uploadsDisabledMessage
                 });
             }
             res.redirect(`/download/${uuid}`);
@@ -206,7 +216,9 @@ export const viewController = {
                 captchaKey: captcha.key,
                 captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
                 siteTitle,
-                siteDescription
+                siteDescription,
+                uploadsEnabled,
+                uploadsDisabledMessage
             });
         }
     },

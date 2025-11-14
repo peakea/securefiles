@@ -19,6 +19,8 @@ let captchaExpiryMs = 300000; // Default 5 minutes
 let captchaExpiryMinutes = 5; // Default 5 minutes
 let siteTitle = 'SecureFiles';
 let siteDescription = 'Upload encrypted archives securely with TOTP authentication';
+let uploadsEnabled = true;
+let uploadsDisabledMessage = 'Uploads are temporarily disabled. Please try again later.';
 
 // Setup function to initialize controller with config
 export const setupFileController = (config) => {
@@ -28,12 +30,32 @@ export const setupFileController = (config) => {
     captchaExpiryMinutes = Math.floor(captchaExpiryMs / 60000);
     siteTitle = config.site?.title || 'SecureFiles';
     siteDescription = config.site?.description || 'Upload encrypted archives securely with TOTP authentication';
+    uploadsEnabled = config.uploads?.enabled ?? true;
+    uploadsDisabledMessage = config.uploads?.disabledMessage || 'Uploads are temporarily disabled. Please try again later.';
 };
 
 export const fileController = {
     // Create - Upload a file
     uploadFile: async (req, res) => {
         try {
+            // Check if uploads are enabled
+            if (!uploadsEnabled) {
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
+                return res.render('index', {
+                    error: uploadsDisabledMessage,
+                    message: null,
+                    maxUploadMB,
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription,
+                    uploadsEnabled,
+                    uploadsDisabledMessage
+                });
+            }
+            
             // Verify captcha first
             const { captchaKey, captchaAnswer } = req.body;
             
@@ -49,7 +71,9 @@ export const fileController = {
                     captchaKey: captcha.key,
                     captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
                 });
             }
             
@@ -68,7 +92,9 @@ export const fileController = {
                     captchaKey: captcha.key,
                     captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
                 });
             }
             
@@ -87,7 +113,9 @@ export const fileController = {
                     captchaKey: captcha.key,
                     captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
                 });
             }
             
@@ -107,7 +135,9 @@ export const fileController = {
                     captchaKey: captcha.key,
                     captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
                 });
             }
             
@@ -126,7 +156,9 @@ export const fileController = {
                     captchaKey: captcha.key,
                     captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
                 });
             }
 
@@ -157,7 +189,9 @@ export const fileController = {
                         captchaKey: captcha.key,
                         captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
                     });
                 }
             }
@@ -191,7 +225,9 @@ export const fileController = {
                 captchaKey: captcha.key,
                 captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
             });
         }
     },
@@ -215,7 +251,9 @@ export const fileController = {
                 captchaKey: captcha.key,
                 captchaExpiryMinutes,
                     siteTitle,
-                    siteDescription
+                    uploadsEnabled,
+                    siteDescription,
+                    uploadsDisabledMessage
             });
         }
     },

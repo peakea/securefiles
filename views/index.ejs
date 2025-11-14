@@ -90,6 +90,28 @@
         a:hover {
             text-decoration: underline;
         }
+        .disabled-section {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+        .disabled-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(128, 128, 128, 0.2);
+            cursor: not-allowed;
+        }
+        .disabled-message {
+            padding: 15px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -111,7 +133,16 @@
         </div>
     <% } %>
     
-    <div class="section">
+    <% if (!uploadsEnabled) { %>
+        <div class="disabled-message">
+            <strong>Notice:</strong> <%= uploadsDisabledMessage %>
+        </div>
+    <% } %>
+    
+    <div class="section <%= !uploadsEnabled ? 'disabled-section' : '' %>">
+        <% if (!uploadsEnabled) { %>
+            <div class="disabled-overlay"></div>
+        <% } %>
         <h2>Upload File</h2>
         <form action="/upload" method="POST" enctype="multipart/form-data">
             <div class="form-group">

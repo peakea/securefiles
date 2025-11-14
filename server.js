@@ -128,6 +128,8 @@ export const startServer = async (options = {}) => {
         const captchaExpiryMinutes = Math.floor((config.captcha?.expiryMs || 300000) / 60000);
         const siteTitle = config.site?.title || 'SecureFiles';
         const siteDescription = config.site?.description || 'Upload encrypted archives securely with TOTP authentication';
+        const uploadsEnabled = config.uploads?.enabled ?? true;
+        const uploadsDisabledMessage = config.uploads?.disabledMessage || 'Uploads are temporarily disabled. Please try again later.';
         
         // Generate new captcha for retry
         const { captchaService } = await import('./services/captchaService.js');
@@ -150,7 +152,9 @@ export const startServer = async (options = {}) => {
                 captchaKey: captcha.key,
                 captchaExpiryMinutes,
                 siteTitle,
-                siteDescription
+                siteDescription,
+                uploadsEnabled,
+                uploadsDisabledMessage
             });
         }
 
@@ -162,7 +166,9 @@ export const startServer = async (options = {}) => {
             captchaKey: captcha.key,
             captchaExpiryMinutes,
             siteTitle,
-            siteDescription
+            siteDescription,
+            uploadsEnabled,
+            uploadsDisabledMessage
         });
     });
 

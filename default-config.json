@@ -45,5 +45,9 @@
         "downloadWindowMs": 900000,
         "downloadMax": 50,
         "maxUploadBytes": 209215200
+    },
+    "uploads": {
+        "enabled": true,
+        "disabledMessage": "Uploads are temporarily disabled. Please try again later."
     }
 }
