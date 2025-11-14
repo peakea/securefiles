@@ -43,7 +43,7 @@ export const fileController = {
                 const captcha = await captchaService.generate();
                 await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
                 
-                return res.render('index', {
+                return res.status(403).render('index', {
                     error: uploadsDisabledMessage,
                     message: null,
                     maxUploadMB,
