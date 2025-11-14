@@ -17,6 +17,8 @@ let uploadsDir = 'uploads';
 let maxUploadMB = 100;
 let captchaExpiryMs = 300000; // Default 5 minutes
 let captchaExpiryMinutes = 5; // Default 5 minutes
+let siteTitle = 'SecureFiles';
+let siteDescription = 'Upload encrypted archives securely with TOTP authentication';
 
 // Setup function to initialize controller with config
 export const setupFileController = (config) => {
@@ -24,6 +26,8 @@ export const setupFileController = (config) => {
     maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
     captchaExpiryMs = config.captcha?.expiryMs || 300000;
     captchaExpiryMinutes = Math.floor(captchaExpiryMs / 60000);
+    siteTitle = config.site?.title || 'SecureFiles';
+    siteDescription = config.site?.description || 'Upload encrypted archives securely with TOTP authentication';
 };
 
 export const fileController = {
@@ -43,7 +47,9 @@ export const fileController = {
                     message: null, 
                     maxUploadMB,
                     captchaKey: captcha.key,
-                    captchaExpiryMinutes
+                    captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
                 });
             }
             
@@ -60,7 +66,9 @@ export const fileController = {
                     message: null, 
                     maxUploadMB,
                     captchaKey: captcha.key,
-                    captchaExpiryMinutes
+                    captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
                 });
             }
             
@@ -77,7 +85,9 @@ export const fileController = {
                     message: null, 
                     maxUploadMB,
                     captchaKey: captcha.key,
-                    captchaExpiryMinutes
+                    captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
                 });
             }
             
@@ -95,7 +105,9 @@ export const fileController = {
                     message: null, 
                     maxUploadMB,
                     captchaKey: captcha.key,
-                    captchaExpiryMinutes
+                    captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
                 });
             }
             
@@ -112,7 +124,9 @@ export const fileController = {
                     message: null, 
                     maxUploadMB,
                     captchaKey: captcha.key,
-                    captchaExpiryMinutes
+                    captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
                 });
             }
 
@@ -141,7 +155,9 @@ export const fileController = {
                         message: null,
                         maxUploadMB,
                         captchaKey: captcha.key,
-                        captchaExpiryMinutes
+                        captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
                     });
                 }
             }
@@ -173,7 +189,9 @@ export const fileController = {
                 message: null, 
                 maxUploadMB,
                 captchaKey: captcha.key,
-                captchaExpiryMinutes
+                captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
             });
         }
     },
@@ -195,7 +213,9 @@ export const fileController = {
                 message: null,
                 maxUploadMB,
                 captchaKey: captcha.key,
-                captchaExpiryMinutes
+                captchaExpiryMinutes,
+                    siteTitle,
+                    siteDescription
             });
         }
     },

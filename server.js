@@ -56,6 +56,7 @@ export const startServer = async (options = {}) => {
     }
 
     const port = config?.server?.port || 3000;
+    const host = config?.server?.host || '0.0.0.0';
 
     // Initialize services and controllers
     console.log('Initializing services...');
@@ -161,8 +162,10 @@ export const startServer = async (options = {}) => {
 
     // Start server
     return new Promise((resolve) => {
-        const server = app.listen(port, () => {
-            console.log(`\n🚀 SecureFiles server running on http://localhost:${port}`);
+        const server = app.listen(port, host, () => {
+            const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+            console.log(`\n🚀 SecureFiles server running on http://${displayHost}:${port}`);
+            console.log(`   Listening on ${host}:${port}`);
             console.log('   Press Ctrl+C to stop\n');
             resolve(server);
         });

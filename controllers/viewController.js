@@ -7,6 +7,8 @@ import { createCanvas } from 'canvas';
 // Configuration variables
 let maxUploadMB = 100;
 let captchaExpiryMs = 300000; // Default 5 minutes
+let siteTitle = 'SecureFiles';
+let siteDescription = 'Upload encrypted archives securely with TOTP authentication';
 let captchaDisplayConfig = {
     colorMode: false,
     font: 'Arial',
@@ -24,6 +26,8 @@ let captchaDisplayConfig = {
 export const setupViewController = (config) => {
     maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
     captchaExpiryMs = config.captcha?.expiryMs || 300000;
+    siteTitle = config.site?.title || 'SecureFiles';
+    siteDescription = config.site?.description || 'Upload encrypted archives securely with TOTP authentication';
     captchaDisplayConfig = {
         colorMode: config.captcha?.colorMode ?? false,
         font: config.captcha?.font || 'Arial',
@@ -54,7 +58,9 @@ export const viewController = {
                 error: null, 
                 maxUploadMB,
                 captchaKey: captcha.key,
-                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000)
+                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
+                siteTitle,
+                siteDescription
             });
         } catch (error) {
             console.error('Error generating captcha:', error);
@@ -63,7 +69,9 @@ export const viewController = {
                 error: 'Error loading page', 
                 maxUploadMB,
                 captchaKey: null,
-                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000)
+                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
+                siteTitle,
+                siteDescription
             });
         }
     },
@@ -168,30 +176,44 @@ export const viewController = {
     },
 
     // Download redirect (for the form on home page)
-    downloadRedirect: (req, res) => {
+    downloadRedirect: async (req, res) => {
         try {
             const { uuid } = req.query;
             if (!uuid) {
+                const captcha = await captchaService.generate();
+                await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+                
                 return res.render('index', { 
                     error: 'UUID is required', 
                     message: null,
-                    maxUploadMB
+                    maxUploadMB,
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
+                    siteTitle,
+                    siteDescription
                 });
             }
             res.redirect(`/download/${uuid}`);
         } catch (error) {
             console.error('Download redirect error:', error);
+            const captcha = await captchaService.generate();
+            await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+            
             return res.render('index', { 
                 error: 'Error processing download redirect', 
                 message: null,
-                maxUploadMB
+                maxUploadMB,
+                captchaKey: captcha.key,
+                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000),
+                siteTitle,
+                siteDescription
             });
         }
     },
 
     // Show TOTP test page
     showTotpTestPage: (req, res) => {
-        res.render('totp-test', { code: null, error: null, secret: null });
+        res.render('totp-test', { code: null, error: null, secret: null, siteTitle });
     },
 
     // Generate TOTP test code
@@ -203,7 +225,8 @@ export const viewController = {
                 return res.render('totp-test', {
                     code: null,
                     error: 'Secret is required',
-                    secret: null
+                    secret: null,
+                    siteTitle
                 });
             }
 
@@ -213,13 +236,15 @@ export const viewController = {
             res.render('totp-test', {
                 code: token,
                 error: null,
-                secret: secret
+                secret: secret,
+                siteTitle
             });
         } catch {
             res.render('totp-test', {
                 code: null,
                 error: 'Invalid secret format. Please ensure it is a valid Base32 encoded string.',
-                secret: ''
+                secret: '',
+                siteTitle
             });
         }
     }
