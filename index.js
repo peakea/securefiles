@@ -25,17 +25,18 @@ if (!existsSync(configPath)) {
     copyFileSync(defaultConfigPath, configPath);
 }
 
-// Import controllers
+// Import controllers and database setup
 import { fileController } from './controllers/fileController.js';
 import { viewController } from './controllers/viewController.js';
-import fileModel from './models/fileModel.js';
+import { setupDatabase } from './db/setup.js';
 
 let config = readJson(configPath);
 if (!config) {
     throw new Error('Invalid JSON in config.json');
 }
 
-fileModel.setupDb(config);
+// Initialize database after config is loaded
+setupDatabase(config);
 
 // Initialize Express app
 const app = express();
