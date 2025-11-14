@@ -126,6 +126,8 @@ export const startServer = async (options = {}) => {
     app.use(async (err, req, res, next) => {
         const maxUploadMB = Math.floor(config.limits?.maxUploadBytes / (1024 * 1024));
         const captchaExpiryMinutes = Math.floor((config.captcha?.expiryMs || 300000) / 60000);
+        const siteTitle = config.site?.title || 'SecureFiles';
+        const siteDescription = config.site?.description || 'Upload encrypted archives securely with TOTP authentication';
         
         // Generate new captcha for retry
         const { captchaService } = await import('./services/captchaService.js');
@@ -146,7 +148,9 @@ export const startServer = async (options = {}) => {
                 message: null,
                 maxUploadMB,
                 captchaKey: captcha.key,
-                captchaExpiryMinutes
+                captchaExpiryMinutes,
+                siteTitle,
+                siteDescription
             });
         }
 
@@ -156,7 +160,9 @@ export const startServer = async (options = {}) => {
             message: null,
             maxUploadMB,
             captchaKey: captcha.key,
-            captchaExpiryMinutes
+            captchaExpiryMinutes,
+            siteTitle,
+            siteDescription
         });
     });
 

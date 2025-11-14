@@ -176,7 +176,7 @@ export const fileController = {
             await fileModel.create(uuid, fileName, totpSecret.base32);
 
             // Pass the TOTP secret for the user to save
-            res.render('upload-success', { uuid, totpSecret: totpSecret.base32, filename: fileName });
+            res.render('upload-success', { uuid, totpSecret: totpSecret.base32, filename: fileName, siteTitle });
         } catch (error) {
             console.error('Upload error:', error);
             
@@ -200,7 +200,7 @@ export const fileController = {
     showDownloadPage: async (req, res) => {
         try {
             const { uuid } = req.params;
-            res.render('download', { uuid, error: null });
+            res.render('download', { uuid, error: null, siteTitle });
         } catch (error) {
             console.error('Download page error:', error);
             
@@ -229,25 +229,25 @@ export const fileController = {
             // Validate UUID format to prevent path traversal
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             if (!uuidRegex.test(uuid)) {
-                return res.render('download', { uuid, error: 'Invalid UUID format' });
+                return res.render('download', { uuid, error: 'Invalid UUID format', siteTitle });
             }
 
             if (!totp) {
-                return res.render('download', { uuid, error: 'TOTP code is required' });
+                return res.render('download', { uuid, error: 'TOTP code is required', siteTitle });
             }
 
             // Get file record from database
             const fileRecord = await fileModel.findByUuid(uuid);
 
             if (!fileRecord) {
-                return res.render('download', { uuid, error: 'File not found' });
+                return res.render('download', { uuid, error: 'File not found', siteTitle });
             }
 
             // Verify TOTP
             const verified = totpService.verifyToken(fileRecord.totp_secret, totp, 2);
 
             if (!verified) {
-                return res.render('download', { uuid, error: 'Invalid TOTP code' });
+                return res.render('download', { uuid, error: 'Invalid TOTP code', siteTitle });
             }
 
             // Read and decrypt file
@@ -261,7 +261,7 @@ export const fileController = {
                 const msg = e.code === 'ERR_OSSL_BAD_DECRYPT'
                     ? 'Unable to decrypt file. The server encryption key may have changed since upload.'
                     : 'Error decrypting file.';
-                return res.render('download', { uuid, error: msg });
+                return res.render('download', { uuid, error: msg, siteTitle });
             }
 
             // Send file
@@ -272,7 +272,8 @@ export const fileController = {
             console.error('Download endpoint error:', error);
             return res.render('download', { 
                 uuid: req.params.uuid, 
-                error: 'Error processing download request' 
+                error: 'Error processing download request',
+                siteTitle
             });
         }
     },
