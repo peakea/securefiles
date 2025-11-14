@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Success - SecureFiles</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .success-banner {
+            padding: 20px;
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .info-box strong {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .code-display {
+            background-color: #fff;
+            border: 2px solid #4CAF50;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 16px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+        .warning {
+            padding: 15px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ff9800;
+            color: #856404;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .button-link {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .button-link:hover {
+            background-color: #0b7dda;
+        }
+        a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        hr {
+            margin: 40px 0;
+            border: none;
+            border-top: 2px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>✓ File Upload Successful!</h1>
+    
+    <div class="success-banner">
+        Your file "<strong><%= filename %></strong>" has been uploaded successfully.
+    </div>
+    
+    <h2>Important Information</h2>
+    
+    <div class="info-box">
+        <strong>File UUID:</strong>
+        <div class="code-display"><%= uuid %></div>
+    </div>
+    
+    <div class="info-box">
+        <strong>TOTP Secret (Base32):</strong>
+        <div class="code-display"><%= totpSecret %></div>
+    </div>
+    
+    <div class="warning">
+        <strong>⚠ Important:</strong> Save both the UUID and TOTP secret to download your file later. 
+        Add the TOTP secret to your authenticator app (Google Authenticator, Authy, etc.) to generate codes for downloading.
+    </div>
+    
+    <h2>Next Steps</h2>
+    <p>
+        <a href="/download/<%= uuid %>" class="button-link">Download Your File Now</a>
+    </p>
+    
+    <hr>
+    
+    <p>
+        <a href="/">← Upload another file</a> | 
+        <a href="/totp-test">Test TOTP Generator</a>
+    </p>
+</body>
+</html>

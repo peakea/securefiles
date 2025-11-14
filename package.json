@@ -1,0 +1,32 @@
+{
+  "name": "securefiles",
+  "version": "1.0.0",
+  "description": "A secure file upload and download tool",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/sqlite3": "^3.1.11",
+    "captcha-canvas": "^3.4.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "file-type": "^21.0.0",
+    "multer": "^2.0.2",
+    "skia-canvas": "^3.0.8",
+    "speakeasy": "^2.0.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@eslint/json": "^0.14.0",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0"
+  }
+}
