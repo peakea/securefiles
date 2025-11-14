@@ -16,12 +16,14 @@ const __dirname = dirname(__filename);
 let uploadsDir = 'uploads';
 let maxUploadMB = 100;
 let captchaExpiryMs = 300000; // Default 5 minutes
+let captchaExpiryMinutes = 5; // Default 5 minutes
 
 // Setup function to initialize controller with config
 export const setupFileController = (config) => {
     uploadsDir = join(__dirname, '..', config.paths?.uploadsDir || 'uploads');
     maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
     captchaExpiryMs = config.captcha?.expiryMs || 300000;
+    captchaExpiryMinutes = Math.floor(captchaExpiryMs / 60000);
 };
 
 export const fileController = {
@@ -40,7 +42,8 @@ export const fileController = {
                     error: 'Captcha verification required', 
                     message: null, 
                     maxUploadMB,
-                    captchaKey: captcha.key
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes
                 });
             }
             
@@ -56,7 +59,8 @@ export const fileController = {
                     error: 'Captcha not found or already used', 
                     message: null, 
                     maxUploadMB,
-                    captchaKey: captcha.key
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes
                 });
             }
             
@@ -72,7 +76,8 @@ export const fileController = {
                     error: 'Captcha expired. Please try again.', 
                     message: null, 
                     maxUploadMB,
-                    captchaKey: captcha.key
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes
                 });
             }
             
@@ -89,7 +94,8 @@ export const fileController = {
                     error: 'Incorrect captcha answer. Please try again.', 
                     message: null, 
                     maxUploadMB,
-                    captchaKey: captcha.key
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes
                 });
             }
             
@@ -105,7 +111,8 @@ export const fileController = {
                     error: 'No file uploaded', 
                     message: null, 
                     maxUploadMB,
-                    captchaKey: captcha.key
+                    captchaKey: captcha.key,
+                    captchaExpiryMinutes
                 });
             }
 
@@ -133,7 +140,8 @@ export const fileController = {
                         error: 'Only archive files (ZIP, 7Z, RAR, GZIP, TAR) are accepted',
                         message: null,
                         maxUploadMB,
-                        captchaKey: captcha.key
+                        captchaKey: captcha.key,
+                        captchaExpiryMinutes
                     });
                 }
             }
@@ -164,22 +172,30 @@ export const fileController = {
                 error: 'Error processing file upload: ' + error.message, 
                 message: null, 
                 maxUploadMB,
-                captchaKey: captcha.key
+                captchaKey: captcha.key,
+                captchaExpiryMinutes
             });
         }
     },
 
     // Read - Show download page
-    showDownloadPage: (req, res) => {
+    showDownloadPage: async (req, res) => {
         try {
             const { uuid } = req.params;
             res.render('download', { uuid, error: null });
         } catch (error) {
             console.error('Download page error:', error);
+            
+            // Generate captcha for error page
+            const captcha = await captchaService.generate();
+            await captchaModel.create(captcha.key, captcha.text, captcha.createdAt);
+            
             return res.render('index', { 
                 error: 'Error processing download page', 
                 message: null,
-                maxUploadMB
+                maxUploadMB,
+                captchaKey: captcha.key,
+                captchaExpiryMinutes
             });
         }
     },

@@ -1,5 +1,5 @@
 "use strict";
-import { CaptchaGenerator } from 'captcha-canvas';
+import { createCanvas } from 'canvas';
 import { randomBytes } from 'crypto';
 import { captchaModel } from '../models/captchaModel.js';
 
@@ -9,8 +9,8 @@ let captchaConfig = {
     characters: 6,
     font: 'Arial',
     size: 60,
-    width: 150,
-    height: 450,
+    width: 350,
+    height: 150,
     skew: false,
     rotate: 0,
     colors: ['#32cf7e'],
@@ -29,8 +29,8 @@ export const setupCaptchaService = (config) => {
         characters: config.captcha?.characters || 6,
         font: config.captcha?.font || 'Arial',
         size: config.captcha?.size || 60,
-        width: config.captcha?.width || 150,
-        height: config.captcha?.height || 450,
+        width: config.captcha?.width || 350,
+        height: config.captcha?.height || 150,
         skew: config.captcha?.skew ?? false,
         rotate: config.captcha?.rotate || 0,
         colors: config.captcha?.colors || ['#32cf7e'],
@@ -80,42 +80,100 @@ export const stopCaptchaCleanup = () => {
     }
 };
 
+// Helper function to generate random captcha text
+const generateCaptchaText = (length) => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excludes similar looking chars
+    let text = '';
+    for (let i = 0; i < length; i++) {
+        text += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return text;
+};
+
+// Helper function to get random color from config
+const getRandomColor = () => {
+    if (captchaConfig.colorMode && captchaConfig.colors.length > 0) {
+        return captchaConfig.colors[Math.floor(Math.random() * captchaConfig.colors.length)];
+    }
+    return captchaConfig.colors[0];
+};
+
 export const captchaService = {
     // Generate a new captcha
     generate: async () => {
-        const generator = new CaptchaGenerator()
-            .setDimension(captchaConfig.width, captchaConfig.height)
-            .setDecoy({ opacity: 0.5 });
-
-        // Configure captcha appearance based on color mode
-        if (captchaConfig.colorMode) {
-            generator.setCaptcha({
-                characters: captchaConfig.characters,
-                font: captchaConfig.font,
-                size: captchaConfig.size,
-                colors: captchaConfig.colors,
-                skew: captchaConfig.skew,
-                rotate: captchaConfig.rotate
-            });
-        } else {
-            generator.setCaptcha({
-                characters: captchaConfig.characters,
-                size: captchaConfig.size
-            });
-        }
-
-        // Set trace
-        generator.setTrace({
-            color: captchaConfig.traceColor,
-            size: captchaConfig.traceSize
-        });
+        const canvas = createCanvas(captchaConfig.width, captchaConfig.height);
+        const ctx = canvas.getContext('2d');
         
-        const buffer = await generator.generate();
+        // Generate captcha text
+        const text = generateCaptchaText(captchaConfig.characters);
+        
+        // Background
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, captchaConfig.width, captchaConfig.height);
+        
+        // Add noise lines
+        for (let i = 0; i < 5; i++) {
+            ctx.strokeStyle = captchaConfig.traceColor;
+            ctx.lineWidth = captchaConfig.traceSize;
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * captchaConfig.width, Math.random() * captchaConfig.height);
+            ctx.lineTo(Math.random() * captchaConfig.width, Math.random() * captchaConfig.height);
+            ctx.stroke();
+        }
+        
+        // Draw text
+        ctx.font = `${captchaConfig.size}px ${captchaConfig.font}`;
+        ctx.textBaseline = 'middle';
+        
+        const charSpacing = captchaConfig.width / (captchaConfig.characters + 1);
+        
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const x = charSpacing * (i + 1);
+            const y = captchaConfig.height / 2;
+            
+            ctx.save();
+            
+            // Apply transformations
+            ctx.translate(x, y);
+            
+            if (captchaConfig.rotate) {
+                const rotation = (Math.random() - 0.5) * (captchaConfig.rotate * Math.PI / 180);
+                ctx.rotate(rotation);
+            }
+            
+            if (captchaConfig.skew) {
+                const skewX = (Math.random() - 0.5) * 0.3;
+                const skewY = (Math.random() - 0.5) * 0.3;
+                ctx.transform(1, skewY, skewX, 1, 0, 0);
+            }
+            
+            // Set color
+            ctx.fillStyle = getRandomColor();
+            
+            // Draw character centered
+            ctx.fillText(char, -ctx.measureText(char).width / 2, 0);
+            
+            ctx.restore();
+        }
+        
+        // Add noise dots
+        for (let i = 0; i < 50; i++) {
+            ctx.fillStyle = getRandomColor();
+            ctx.fillRect(
+                Math.random() * captchaConfig.width,
+                Math.random() * captchaConfig.height,
+                2,
+                2
+            );
+        }
+        
+        const buffer = canvas.toBuffer('image/png');
         const key = randomBytes(16).toString('hex');
         
         return {
             key,
-            text: generator.text,
+            text,
             buffer,
             createdAt: Date.now()
         };

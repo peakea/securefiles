@@ -122,8 +122,9 @@ export const startServer = async (options = {}) => {
     app.post('/totp-test', viewController.generateTotpTest);
 
     // Multer error handler
-    app.use(async (err, req, res) => {
+    app.use(async (err, req, res, next) => {
         const maxUploadMB = Math.floor(config.limits?.maxUploadBytes / (1024 * 1024));
+        const captchaExpiryMinutes = Math.floor((config.captcha?.expiryMs || 300000) / 60000);
         
         // Generate new captcha for retry
         const { captchaService } = await import('./services/captchaService.js');
@@ -143,7 +144,8 @@ export const startServer = async (options = {}) => {
                 error: errorMessages[err.code] || `Upload error: ${err.message}`,
                 message: null,
                 maxUploadMB,
-                captchaKey: captcha.key
+                captchaKey: captcha.key,
+                captchaExpiryMinutes
             });
         }
 
@@ -152,7 +154,8 @@ export const startServer = async (options = {}) => {
             error: 'An unexpected error occurred. Please try again later.',
             message: null,
             maxUploadMB,
-            captchaKey: captcha.key
+            captchaKey: captcha.key,
+            captchaExpiryMinutes
         });
     });
 

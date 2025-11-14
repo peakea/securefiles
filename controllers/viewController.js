@@ -2,7 +2,7 @@
 import { totpService } from '../services/totpService.js';
 import { captchaService } from '../services/captchaService.js';
 import { captchaModel } from '../models/captchaModel.js';
-import { CaptchaGenerator } from 'captcha-canvas';
+import { createCanvas } from 'canvas';
 
 // Configuration variables
 let maxUploadMB = 100;
@@ -11,8 +11,8 @@ let captchaDisplayConfig = {
     colorMode: false,
     font: 'Arial',
     size: 60,
-    width: 150,
-    height: 450,
+    width: 350,
+    height: 150,
     skew: false,
     rotate: 0,
     colors: ['#32cf7e'],
@@ -28,8 +28,8 @@ export const setupViewController = (config) => {
         colorMode: config.captcha?.colorMode ?? false,
         font: config.captcha?.font || 'Arial',
         size: config.captcha?.size || 60,
-        width: config.captcha?.width || 150,
-        height: config.captcha?.height || 450,
+        width: config.captcha?.width || 350,
+        height: config.captcha?.height || 150,
         skew: config.captcha?.skew ?? false,
         rotate: config.captcha?.rotate || 0,
         colors: config.captcha?.colors || ['#32cf7e'],
@@ -53,7 +53,8 @@ export const viewController = {
                 message: null, 
                 error: null, 
                 maxUploadMB,
-                captchaKey: captcha.key
+                captchaKey: captcha.key,
+                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000)
             });
         } catch (error) {
             console.error('Error generating captcha:', error);
@@ -61,7 +62,8 @@ export const viewController = {
                 message: null, 
                 error: 'Error loading page', 
                 maxUploadMB,
-                captchaKey: null
+                captchaKey: null,
+                captchaExpiryMinutes: Math.floor(captchaExpiryMs / 60000)
             });
         }
     },
@@ -85,33 +87,76 @@ export const viewController = {
             }
             
             // Generate image from stored text using configured appearance
-            const generator = new CaptchaGenerator()
-                .setDimension(captchaDisplayConfig.width, captchaDisplayConfig.height)
-                .setDecoy({ opacity: 0.5 });
-
-            // Configure captcha appearance based on color mode
-            if (captchaDisplayConfig.colorMode) {
-                generator.setCaptcha({
-                    text: captcha.text,
-                    font: captchaDisplayConfig.font,
-                    size: captchaDisplayConfig.size,
-                    colors: captchaDisplayConfig.colors,
-                    skew: captchaDisplayConfig.skew,
-                    rotate: captchaDisplayConfig.rotate
-                });
-            } else {
-                generator.setCaptcha({
-                    text: captcha.text,
-                    size: captchaDisplayConfig.size
-                });
-            }
-
-            generator.setTrace({
-                color: captchaDisplayConfig.traceColor,
-                size: captchaDisplayConfig.traceSize
-            });
+            const canvas = createCanvas(captchaDisplayConfig.width, captchaDisplayConfig.height);
+            const ctx = canvas.getContext('2d');
             
-            const buffer = await generator.generate();
+            const text = captcha.text;
+            
+            // Background
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, captchaDisplayConfig.width, captchaDisplayConfig.height);
+            
+            // Add noise lines
+            for (let i = 0; i < 5; i++) {
+                ctx.strokeStyle = captchaDisplayConfig.traceColor;
+                ctx.lineWidth = captchaDisplayConfig.traceSize;
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * captchaDisplayConfig.width, Math.random() * captchaDisplayConfig.height);
+                ctx.lineTo(Math.random() * captchaDisplayConfig.width, Math.random() * captchaDisplayConfig.height);
+                ctx.stroke();
+            }
+            
+            // Draw text
+            ctx.font = `${captchaDisplayConfig.size}px ${captchaDisplayConfig.font}`;
+            ctx.textBaseline = 'middle';
+            
+            const charSpacing = captchaDisplayConfig.width / (text.length + 1);
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const x = charSpacing * (i + 1);
+                const y = captchaDisplayConfig.height / 2;
+                
+                ctx.save();
+                ctx.translate(x, y);
+                
+                if (captchaDisplayConfig.rotate) {
+                    const rotation = (Math.random() - 0.5) * (captchaDisplayConfig.rotate * Math.PI / 180);
+                    ctx.rotate(rotation);
+                }
+                
+                if (captchaDisplayConfig.skew) {
+                    const skewX = (Math.random() - 0.5) * 0.3;
+                    const skewY = (Math.random() - 0.5) * 0.3;
+                    ctx.transform(1, skewY, skewX, 1, 0, 0);
+                }
+                
+                // Set color
+                if (captchaDisplayConfig.colorMode && captchaDisplayConfig.colors.length > 0) {
+                    ctx.fillStyle = captchaDisplayConfig.colors[Math.floor(Math.random() * captchaDisplayConfig.colors.length)];
+                } else {
+                    ctx.fillStyle = captchaDisplayConfig.colors[0];
+                }
+                
+                ctx.fillText(char, -ctx.measureText(char).width / 2, 0);
+                ctx.restore();
+            }
+            
+            // Add noise dots
+            for (let i = 0; i < 50; i++) {
+                const color = captchaDisplayConfig.colorMode && captchaDisplayConfig.colors.length > 0
+                    ? captchaDisplayConfig.colors[Math.floor(Math.random() * captchaDisplayConfig.colors.length)]
+                    : captchaDisplayConfig.colors[0];
+                ctx.fillStyle = color;
+                ctx.fillRect(
+                    Math.random() * captchaDisplayConfig.width,
+                    Math.random() * captchaDisplayConfig.height,
+                    2,
+                    2
+                );
+            }
+            
+            const buffer = canvas.toBuffer('image/png');
             
             res.setHeader('Content-Type', 'image/png');
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

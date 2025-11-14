@@ -31,10 +31,11 @@ cd securefiles
 npm install
 ```
 
-**Raspberry Pi Users:** SQLite3 requires building from source on Raspberry Pi:
+**Raspberry Pi Users:** Build dependencies from source on Raspberry Pi:
 ```bash
-sudo apt install build-essential python3
+sudo apt install build-essential python3 libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 npm install sqlite3 --build-from-source
+npm install canvas --build-from-source
 ```
 
 3. Initialize configuration:

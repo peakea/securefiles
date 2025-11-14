@@ -127,6 +127,9 @@
                 <div class="form-group">
                     <label for="captcha">Security Verification:</label>
                     <img src="/captcha/<%= captchaKey %>" alt="Captcha" style="border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px; display: block;">
+                    <p style="color: #666; font-size: 14px; margin: 5px 0 10px 0;">
+                        <em>Enter the characters shown above. Captcha expires in <%= captchaExpiryMinutes %> minutes.</em>
+                    </p>
                     <input type="text" id="captchaAnswer" name="captchaAnswer" placeholder="Enter the text shown above" required autocomplete="off">
                     <input type="hidden" name="captchaKey" value="<%= captchaKey %>">
                 </div>
