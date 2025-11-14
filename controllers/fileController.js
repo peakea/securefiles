@@ -4,18 +4,21 @@ import { fileModel } from '../models/fileModel.js';
 import { encryptionService } from '../services/encryptionService.js';
 import { totpService } from '../services/totpService.js';
 import { fileStorageService } from '../services/fileStorageService.js';
-import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load config
-const configPath = join(__dirname, '../config.json');
-const config = JSON.parse(readFileSync(configPath, 'utf8'));
-const uploadsDir = join(__dirname, '..', config.paths?.uploadsDir || 'uploads');
-const maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
+// Configuration variables
+let uploadsDir = 'uploads';
+let maxUploadMB = 100;
+
+// Setup function to initialize controller with config
+export const setupFileController = (config) => {
+    uploadsDir = join(__dirname, '..', config.paths?.uploadsDir || 'uploads');
+    maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
+};
 
 export const fileController = {
     // Create - Upload a file

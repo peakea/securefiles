@@ -1,16 +1,13 @@
 "use strict";
 import { totpService } from '../services/totpService.js';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Configuration variables
+let maxUploadMB = 100;
 
-// Load config
-const configPath = join(__dirname, '../config.json');
-const config = JSON.parse(readFileSync(configPath, 'utf8'));
-const maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
+// Setup function to initialize controller with config
+export const setupViewController = (config) => {
+    maxUploadMB = Math.floor((config.limits?.maxUploadBytes || 0) / (1024 * 1024));
+};
 
 export const viewController = {
     // Show home page

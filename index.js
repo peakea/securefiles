@@ -25,18 +25,22 @@ if (!existsSync(configPath)) {
     copyFileSync(defaultConfigPath, configPath);
 }
 
-// Import controllers and database setup
-import { fileController } from './controllers/fileController.js';
-import { viewController } from './controllers/viewController.js';
-import { setupDatabase } from './db/setup.js';
+// Import controllers and services setup
+import { fileController, setupFileController } from './controllers/fileController.js';
+import { viewController, setupViewController } from './controllers/viewController.js';
+import { setupDatabase } from './services/databaseService.js';
+import { setupEncryption } from './services/encryptionService.js';
 
 let config = readJson(configPath);
 if (!config) {
     throw new Error('Invalid JSON in config.json');
 }
 
-// Initialize database after config is loaded
+// Initialize services and controllers after config is loaded
 setupDatabase(config);
+setupEncryption(config);
+setupFileController(config);
+setupViewController(config);
 
 // Initialize Express app
 const app = express();

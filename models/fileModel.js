@@ -1,5 +1,5 @@
 "use strict";
-import { run, get, all } from '../db/setup.js';
+import { run, get, all } from '../services/databaseService.js';
 
 // File Model - CRUD operations
 export const fileModel = {
