@@ -1,6 +1,7 @@
 "use strict";
 import { CaptchaGenerator } from 'captcha-canvas';
 import { randomBytes } from 'crypto';
+import { captchaModel } from '../models/captchaModel.js';
 
 // Configuration variables
 let captchaConfig = {
@@ -17,6 +18,10 @@ let captchaConfig = {
     traceSize: 2
 };
 
+let cleanupInterval = null;
+let captchaExpiryMs = 300000; // Default 5 minutes
+let cleanupIntervalMs = 600000; // Default 10 minutes
+
 // Setup function to initialize captcha service with config
 export const setupCaptchaService = (config) => {
     captchaConfig = {
@@ -32,6 +37,47 @@ export const setupCaptchaService = (config) => {
         traceColor: config.captcha?.traceColor || '#32cf7e',
         traceSize: config.captcha?.traceSize || 2
     };
+
+    captchaExpiryMs = config.captcha?.expiryMs || 300000;
+    cleanupIntervalMs = config.captcha?.cleanupIntervalMs || 600000;
+
+    console.log('Captcha service initialized');
+    
+    // Start cleanup task
+    startCleanup();
+};
+
+// Cleanup functions
+const startCleanup = () => {
+    if (cleanupInterval) {
+        console.log('Captcha cleanup already running');
+        return;
+    }
+
+    console.log(`Captcha cleanup: every ${cleanupIntervalMs / 1000 / 60} minutes, expiry: ${captchaExpiryMs / 1000 / 60} minutes`);
+
+    // Run on interval
+    cleanupInterval = setInterval(async () => {
+        await cleanExpiredCaptchas();
+    }, cleanupIntervalMs);
+};
+
+const cleanExpiredCaptchas = async () => {
+    try {
+        const deleted = await captchaModel.cleanExpired(captchaExpiryMs);
+        const remaining = await captchaModel.count();
+        console.log(`Captcha cleanup: removed ${deleted} expired, ${remaining} remaining`);
+    } catch (error) {
+        console.error('Captcha cleanup error:', error);
+    }
+};
+
+export const stopCaptchaCleanup = () => {
+    if (cleanupInterval) {
+        clearInterval(cleanupInterval);
+        cleanupInterval = null;
+        console.log('Captcha cleanup stopped');
+    }
 };
 
 export const captchaService = {

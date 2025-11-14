@@ -8,13 +8,12 @@ A captcha verification system has been implemented to prevent automated file upl
 ### 1. **Services**
 
 #### `/services/captchaService.js`
-- `generate()` - Generates a new captcha with a unique key, text, image buffer, and expiration time
+- `setupCaptchaService(config)` - Initialize captcha service with configuration and start cleanup
+- `generate()` - Generates a new captcha with a unique key, text, image buffer, and creation time
 - `verify(userAnswer, storedAnswer)` - Verifies if the user's answer matches the stored captcha text
-
-#### `/services/captchaCleanupService.js`
-- `startCaptchaCleanup(intervalMs)` - Starts periodic cleanup of expired captchas (default: 10 minutes)
+- `isExpired(createdAt, expiryMs)` - Checks if a captcha has expired
 - `stopCaptchaCleanup()` - Stops the cleanup task
-- Runs automatically on server start and logs cleanup statistics
+- Includes automatic cleanup that runs periodically and logs statistics
 
 ### 2. **Models**
 

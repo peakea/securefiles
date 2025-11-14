@@ -12,8 +12,10 @@ export const setupMaintenance = (config) => {
     allowedRoutes = config.maintenance?.allowedRoutes || [];
     
     if (maintenanceEnabled) {
-        console.log('⚠️  Maintenance mode is ENABLED');
-        console.log(`Allowed routes: ${allowedRoutes.length > 0 ? allowedRoutes.join(', ') : 'none'}`);
+        console.log('⚠️  Maintenance mode ENABLED');
+        console.log(`   Allowed routes: ${allowedRoutes.length > 0 ? allowedRoutes.join(', ') : 'none'}`);
+    } else {
+        console.log('Maintenance mode initialized');
     }
 };
 

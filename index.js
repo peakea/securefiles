@@ -30,7 +30,6 @@ import { viewController, setupViewController } from './controllers/viewControlle
 import { setupDatabase } from './services/databaseService.js';
 import { setupEncryption } from './services/encryptionService.js';
 import { setupCaptchaService } from './services/captchaService.js';
-import { startCaptchaCleanup } from './services/captchaCleanupService.js';
 import { setupMaintenance, maintenanceMiddleware } from './middleware/maintenanceMiddleware.js';
 
 let config = readJson(configPath);
@@ -41,13 +40,10 @@ if (!config) {
 // Initialize services and controllers after config is loaded
 setupDatabase(config);
 setupEncryption(config);
-setupCaptchaService(config);
+setupCaptchaService(config); // Includes cleanup task
 setupFileController(config);
 setupViewController(config);
 setupMaintenance(config);
-
-// Start captcha cleanup task with config
-startCaptchaCleanup(config);
 
 // Initialize Express app
 const app = express();

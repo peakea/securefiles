@@ -13,8 +13,10 @@ export const setupEncryption = (config) => {
     
     if (process.env.ENCRYPTION_KEY) {
         ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'base64');
+        console.log('Encryption service initialized (env key)');
     } else if (config.security?.encryptionKey) {
         ENCRYPTION_KEY = Buffer.from(config.security.encryptionKey, 'base64');
+        console.log('Encryption service initialized (config key)');
     } else {
         throw new Error('Encryption key not configured');
     }
