@@ -2,10 +2,15 @@
   "name": "securefiles",
   "version": "1.0.0",
   "description": "A secure file upload and download tool",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
+  "bin": {
+    "securefiles": "./cli.js"
+  },
   "scripts": {
-    "start": "node index.js",
+    "start": "node cli.js start",
+    "init": "node cli.js init",
+    "config": "node cli.js config",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,6 +19,7 @@
   "dependencies": {
     "@types/sqlite3": "^3.1.11",
     "captcha-canvas": "^3.4.0",
+    "commander": "^14.0.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
