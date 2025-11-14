@@ -28,8 +28,7 @@ export const setupDatabase = (config) => {
                 uuid TEXT PRIMARY KEY,
                 filename TEXT NOT NULL,
                 totp_secret TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`);
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
         }
     });
 
